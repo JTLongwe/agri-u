@@ -17,6 +17,16 @@ vi.mock('./utils/AuthContext', () => ({
     })
 }));
 
+// 3. Mock react-i18next
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            if (key === 'morning') return 'Morning, Farmer! 🌾';
+            return key;
+        }
+    })
+}));
+
 describe('Home Dashboard Smoke Test #1', () => {
     it('successfully mounts the UI, welcomes the user, and loads progress', async () => {
         render(

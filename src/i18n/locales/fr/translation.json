@@ -3,5 +3,17 @@
     "dashboard": "Tableau de bord",
     "learn": "Apprendre",
     "community": "Communauté",
-    "profile": "Profil"
+    "profile": "Profil",
+    "morning": "Bonjour, Fermier ! 🌾",
+    "ready": "Prêt à améliorer votre récolte aujourd'hui ?",
+    "daily_tip": "Conseil du Jour",
+    "weather": "Météo",
+    "scan_crop": "Scanner la culture",
+    "identify_diseases": "Identifier les maladies",
+    "badges": "Badges Agri-U",
+    "collect_all": "Collectionnez-les tous",
+    "yield_est": "Rendement Est.",
+    "expected": "+15 % Prévu",
+    "progress": "Votre Progression",
+    "continue": "Continuer l'Apprentissage"
 }

@@ -3,5 +3,17 @@
     "dashboard": "Dashboard",
     "learn": "Learn",
     "community": "Community",
-    "profile": "Profile"
+    "profile": "Profile",
+    "morning": "Morning, Farmer! 🌾",
+    "ready": "Ready to improve your harvest today?",
+    "daily_tip": "Daily Tip",
+    "weather": "Weather",
+    "scan_crop": "Scan Crop",
+    "identify_diseases": "Identify diseases",
+    "badges": "Agri-U Badges",
+    "collect_all": "Collect them all",
+    "yield_est": "Yield Est.",
+    "expected": "+15% Expected",
+    "progress": "Your Progress",
+    "continue": "Continue Learning"
 }

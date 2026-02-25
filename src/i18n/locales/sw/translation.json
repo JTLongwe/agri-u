@@ -3,5 +3,17 @@
     "dashboard": "Dashibodi",
     "learn": "Jifunze",
     "community": "Jumuiya",
-    "profile": "Wasifu"
+    "profile": "Wasifu",
+    "morning": "Asubuhi, Mkulima! 🌾",
+    "ready": "Uko tayari kuboresha mavuno yako leo?",
+    "daily_tip": "Kidokezo cha Leo",
+    "weather": "Hali ya Hewa",
+    "scan_crop": "Kagua Mmea",
+    "identify_diseases": "Tambua magonjwa",
+    "badges": "Beji za Agri-U",
+    "collect_all": "Kusanya zote",
+    "yield_est": "Makadirio ya Mavuno",
+    "expected": "+15% Inatarajiwa",
+    "progress": "Maendeleo Yako",
+    "continue": "Endelea Kujifunza"
 }

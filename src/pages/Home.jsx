@@ -7,8 +7,10 @@ import { useAuth } from '../utils/AuthContext';
 import { Camera, CameraResultType } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 export default function Home() {
+    const { t } = useTranslation();
     const [progress, setProgress] = useState(0);
     const [weather, setWeather] = useState(null);
     const [isFetchingWeather, setIsFetchingWeather] = useState(false);
@@ -69,14 +71,14 @@ export default function Home() {
     return (
         <div className="fade-in-up">
             <div style={{ marginBottom: '24px' }}>
-                <h1>Morning, Farmer! 🌾</h1>
-                <p>Ready to improve your harvest today?</p>
+                <h1>{t('morning')}</h1>
+                <p>{t('ready')}</p>
             </div>
 
             <div className="card" style={{ background: 'linear-gradient(135deg, var(--primary-green), #1b5e20)', color: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                        <h3 style={{ color: 'var(--accent-yellow)', marginBottom: '4px' }}>Daily Tip</h3>
+                        <h3 style={{ color: 'var(--accent-yellow)', marginBottom: '4px' }}>{t('daily_tip')}</h3>
                         <p style={{ color: '#e8f5e9', fontSize: '14px', marginBottom: '0' }}>Check your drip lines for mineral buildup once a month to ensure even water distribution.</p>
                     </div>
                     <Droplets size={32} style={{ opacity: 0.8 }} />
@@ -87,7 +89,7 @@ export default function Home() {
                 {/* Weather Data API Card */}
                 <div className="card" onClick={fetchWeather} style={{ padding: '16px', background: 'var(--surface-color)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <CloudSun size={28} color="var(--primary-green)" style={{ marginBottom: '8px' }} />
-                    <h3 style={{ fontSize: '15px', margin: 0 }}>Weather</h3>
+                    <h3 style={{ fontSize: '15px', margin: 0 }}>{t('weather')}</h3>
                     {isFetchingWeather ? (
                         <small>Locating...</small>
                     ) : weather ? (
@@ -100,8 +102,8 @@ export default function Home() {
                 {/* Pl@ntNet AI Camera Card */}
                 <div className="card" onClick={takePhoto} style={{ padding: '16px', background: 'var(--surface-color)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <CameraIcon size={28} color="var(--accent-yellow)" style={{ marginBottom: '8px' }} />
-                    <h3 style={{ fontSize: '15px', margin: 0 }}>Scan Crop</h3>
-                    <small style={{ color: 'var(--text-secondary)' }}>Identify diseases</small>
+                    <h3 style={{ fontSize: '15px', margin: 0 }}>{t('scan_crop')}</h3>
+                    <small style={{ color: 'var(--text-secondary)' }}>{t('identify_diseases')}</small>
                 </div>
             </div>
 
@@ -120,7 +122,7 @@ export default function Home() {
                 </div>
             )}
 
-            <h2 style={{ fontSize: '18px', marginTop: '24px' }}>Your Progress</h2>
+            <h2 style={{ fontSize: '18px', marginTop: '24px' }}>{t('progress')}</h2>
             <div className="glass-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontWeight: '600' }}>Climate-Smart Basics</span>
@@ -132,7 +134,7 @@ export default function Home() {
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
                     <button className="btn btn-primary" onClick={() => navigate('/learn')}>
-                        <Play size={18} fill="currentColor" /> Continue Learning
+                        <Play size={18} fill="currentColor" /> {t('continue')}
                     </button>
                 </div>
             </div>
@@ -140,13 +142,13 @@ export default function Home() {
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <div className="card" style={{ flex: 1, textAlign: 'center', padding: '16px' }}>
                     <Award size={32} color="var(--accent-yellow)" style={{ margin: '0 auto 8px' }} />
-                    <h3 style={{ fontSize: '16px', margin: 0 }}>Agri-U Badges</h3>
-                    <small>Collect them all</small>
+                    <h3 style={{ fontSize: '16px', margin: 0 }}>{t('badges')}</h3>
+                    <small>{t('collect_all')}</small>
                 </div>
                 <div className="card" style={{ flex: 1, textAlign: 'center', padding: '16px' }}>
                     <TrendingUp size={32} color="var(--success)" style={{ margin: '0 auto 8px' }} />
-                    <h3 style={{ fontSize: '16px', margin: 0 }}>Yield Est.</h3>
-                    <small>+15% Expected</small>
+                    <h3 style={{ fontSize: '16px', margin: 0 }}>{t('yield_est')}</h3>
+                    <small>{t('expected')}</small>
                 </div>
             </div>
         </div>
