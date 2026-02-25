@@ -12,12 +12,27 @@ export default function Profile() {
         login(editName);
         setIsEditing(false);
     };
-    const allBadges = [
-        { name: 'Water Saver', earned: true },
-        { name: 'Seed Expert', earned: false },
-        { name: 'Soil Master', earned: false },
-        { name: 'Climate Ready', earned: false },
-    ];
+    const [savedLessonsIds, setSavedLessonsIds] = useState([]);
+    const [allBadges, setAllBadges] = useState([]);
+
+    useEffect(() => {
+        if (user) {
+            import('../utils/storage').then(({ storage }) => {
+                storage.getSavedLessons(user.uid).then(saved => {
+                    const ids = saved.map(l => l.id);
+                    setSavedLessonsIds(ids);
+
+                    import('../data/mockData').then(({ lessons }) => {
+                        const badges = lessons.map(lesson => ({
+                            name: lesson.awardedBadge,
+                            earned: ids.includes(lesson.id)
+                        }));
+                        setAllBadges(badges);
+                    });
+                });
+            });
+        }
+    }, [user]);
 
     return (
         <div className="fade-in-up">
