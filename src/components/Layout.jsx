@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, BookOpen, Users, User } from 'lucide-react';
 import { useNetwork } from '../utils/useNetwork';
 import { useAuth } from '../utils/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const NavItem = ({ to, icon: Icon, label }) => (
     <NavLink
@@ -28,7 +29,12 @@ const NavItem = ({ to, icon: Icon, label }) => (
 export function Header() {
     const isOnline = useNetwork();
     const { user } = useAuth();
+    const { i18n } = useTranslation();
     const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'F';
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
 
     return (
         <header style={{
@@ -67,8 +73,26 @@ export function Header() {
                     }}>A</div>
                     <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary-green)' }}>Agri-U</span>
                 </div>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
-                    {userInitial}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <select
+                        value={i18n.language}
+                        onChange={(e) => changeLanguage(e.target.value)}
+                        style={{
+                            padding: '4px 8px',
+                            borderRadius: 'var(--border-radius-pill)',
+                            border: '1px solid var(--border-color)',
+                            background: 'white',
+                            fontSize: '12px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="en">EN</option>
+                        <option value="sw">SW</option>
+                        <option value="fr">FR</option>
+                    </select>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                        {userInitial}
+                    </div>
                 </div>
             </div>
         </header >
@@ -76,6 +100,8 @@ export function Header() {
 }
 
 export function BottomNav() {
+    const { t } = useTranslation();
+
     return (
         <nav style={{
             position: 'fixed',
@@ -92,10 +118,10 @@ export function BottomNav() {
             padding: '8px 0',
             paddingBottom: 'calc(8px + env(safe-area-inset-bottom))'
         }}>
-            <NavItem to="/" icon={Home} label="Home" />
-            <NavItem to="/learn" icon={BookOpen} label="Learn" />
-            <NavItem to="/community" icon={Users} label="Community" />
-            <NavItem to="/profile" icon={User} label="Profile" />
+            <NavItem to="/" icon={Home} label={t('dashboard')} />
+            <NavItem to="/learn" icon={BookOpen} label={t('learn')} />
+            <NavItem to="/community" icon={Users} label={t('community')} />
+            <NavItem to="/profile" icon={User} label={t('profile')} />
         </nav>
     );
 }

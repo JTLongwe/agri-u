@@ -4,31 +4,34 @@ import { storage } from '../utils/storage';
 import { Download, CloudOff, CheckCircle2, Search } from 'lucide-react';
 import { useNetwork } from '../utils/useNetwork';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../utils/AuthContext';
 
 export default function Learn() {
     const isOnline = useNetwork();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [savedLessons, setSavedLessons] = useState([]);
     const [activeCategory, setActiveCategory] = useState('All Courses');
     const [searchQuery, setSearchQuery] = useState('');
     const categories = ['All Courses', 'Water', 'Crops', 'Soil'];
 
     useEffect(() => {
-        loadSaved();
-    }, []);
+        if (user) loadSaved();
+    }, [user]);
 
     const loadSaved = async () => {
-        const saved = await storage.getSavedLessons();
+        const saved = await storage.getSavedLessons(user.uid);
         setSavedLessons(saved.map(l => l.id));
     };
 
     const handleDownload = async (lesson) => {
-        await storage.saveLesson(lesson);
+        if (!user) return;
+        await storage.saveLesson(user.uid, lesson);
         loadSaved();
         // Simulate updating overall progress slightly
-        let currentProg = await storage.getProgress();
+        let currentProg = await storage.getProgress(user.uid);
         if (currentProg < 100) {
-            await storage.updateProgress(Math.min(100, currentProg + 15));
+            await storage.updateProgress(user.uid, Math.min(100, currentProg + 15));
         }
     };
 

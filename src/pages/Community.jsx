@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Heart, Share2, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../utils/AuthContext';
 import { db } from '../config/firebase';
 import { collection, onSnapshot, addDoc, updateDoc, doc, query, orderBy, serverTimestamp, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
@@ -7,6 +8,7 @@ import { collection, onSnapshot, addDoc, updateDoc, doc, query, orderBy, serverT
 export default function Community() {
     const [feed, setFeed] = useState([]);
     const [newPost, setNewPost] = useState('');
+    const [loading, setLoading] = useState(true);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -17,8 +19,10 @@ export default function Community() {
                 ...doc.data()
             }));
             setFeed(postsData);
+            setLoading(false);
         }, (error) => {
             console.error("Firestore error: ", error);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, []);
@@ -35,9 +39,10 @@ export default function Community() {
                 comments: 0
             });
             setNewPost('');
+            toast.success('Posted successfully');
         } catch (error) {
             console.error("Error adding post: ", error);
-            alert("Ensure you are logged in to post!");
+            toast.error("Ensure you are logged in to post");
         }
     };
 
@@ -61,13 +66,23 @@ export default function Community() {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this post?")) {
-            await deleteDoc(doc(db, 'posts', id));
-        }
+        toast.custom((t) => (
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--error)', padding: '16px' }}>
+                <p style={{ margin: 0, fontWeight: 'bold' }}>Delete post?</p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn" style={{ padding: '4px 12px' }} onClick={() => toast.dismiss(t.id)}>Cancel</button>
+                    <button className="btn btn-primary" style={{ background: 'var(--error)', padding: '4px 12px' }} onClick={async () => {
+                        toast.dismiss(t.id);
+                        await deleteDoc(doc(db, 'posts', id));
+                        toast.success('Post deleted');
+                    }}>Delete</button>
+                </div>
+            </div>
+        ));
     }
 
     const handleShare = () => {
-        alert("Link copied to clipboard!");
+        toast.success("Link copied to clipboard!");
     };
 
     // Helper to format Firebase timestamp
@@ -113,56 +128,83 @@ export default function Community() {
             </div>
 
             <div className="feed">
-                {feed.map(post => {
-                    const hasLiked = user && post.likes && post.likes.includes(user.uid);
-                    const likeCount = post.likes ? post.likes.length : 0;
-                    const isOwner = user && user.uid === post.userId;
-
-                    return (
-                        <div key={post.id} className="card" style={{ position: 'relative' }}>
-                            {isOwner && (
-                                <button
-                                    onClick={() => handleDelete(post.id)}
-                                    style={{ position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            )}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                <div style={{
-                                    width: '40px', height: '40px', borderRadius: '50%',
-                                    background: 'var(--primary-green)', color: 'white',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: 'bold'
-                                }}>
-                                    {post.user ? post.user.charAt(0).toUpperCase() : 'F'}
-                                </div>
+                {loading ? (
+                    <>
+                        <div className="card">
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                                <div className="skeleton skeleton-avatar"></div>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '15px' }}>{post.user || 'Farmer'}</h3>
-                                    <small>{formatTime(post.timestamp)}</small>
+                                    <div className="skeleton skeleton-text" style={{ width: '100px' }}></div>
+                                    <div className="skeleton skeleton-text" style={{ width: '60px' }}></div>
                                 </div>
                             </div>
-
-                            <p style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>{post.text}</p>
-
-                            <div style={{ display: 'flex', gap: '24px', color: 'var(--text-secondary)', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
-                                <div onClick={() => handleLike(post)} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: hasLiked ? 'var(--error)' : 'inherit' }}>
-                                    <Heart size={18} fill={hasLiked ? 'currentColor' : 'none'} /> {likeCount}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                    <MessageSquare size={18} /> {post.comments || 0}
-                                </div>
-                                <div onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginLeft: 'auto' }}>
-                                    <Share2 size={18} />
-                                </div>
-                            </div>
+                            <div className="skeleton skeleton-text" style={{ width: '100%', height: '40px' }}></div>
                         </div>
-                    );
-                })}
-                {feed.length === 0 && (
-                    <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px 0' }}>
-                        No posts yet. Be the first to share an update! 🚜
-                    </div>
+                        <div className="card">
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                                <div className="skeleton skeleton-avatar"></div>
+                                <div>
+                                    <div className="skeleton skeleton-text" style={{ width: '80px' }}></div>
+                                    <div className="skeleton skeleton-text" style={{ width: '50px' }}></div>
+                                </div>
+                            </div>
+                            <div className="skeleton skeleton-text" style={{ width: '80%', height: '20px' }}></div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {feed.map(post => {
+                            const hasLiked = user && post.likes && post.likes.includes(user.uid);
+                            const likeCount = post.likes ? post.likes.length : 0;
+                            const isOwner = user && user.uid === post.userId;
+
+                            return (
+                                <div key={post.id} className="card" style={{ position: 'relative' }}>
+                                    {isOwner && (
+                                        <button
+                                            onClick={() => handleDelete(post.id)}
+                                            style={{ position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                                        <div style={{
+                                            width: '40px', height: '40px', borderRadius: '50%',
+                                            background: 'var(--primary-green)', color: 'white',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {post.user ? post.user.charAt(0).toUpperCase() : 'F'}
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '15px' }}>{post.user || 'Farmer'}</h3>
+                                            <small>{formatTime(post.timestamp)}</small>
+                                        </div>
+                                    </div>
+
+                                    <p style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>{post.text}</p>
+
+                                    <div style={{ display: 'flex', gap: '24px', color: 'var(--text-secondary)', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+                                        <div onClick={() => handleLike(post)} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: hasLiked ? 'var(--error)' : 'inherit', transition: 'transform 0.2s', transform: hasLiked ? 'scale(1.1)' : 'scale(1)' }}>
+                                            <Heart size={18} fill={hasLiked ? 'currentColor' : 'none'} style={{ transition: 'all 0.2s' }} /> {likeCount}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                            <MessageSquare size={18} /> {post.comments || 0}
+                                        </div>
+                                        <div onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginLeft: 'auto' }}>
+                                            <Share2 size={18} />
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {!loading && feed.length === 0 && (
+                            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px 0' }}>
+                                No posts yet. Be the first to share an update! 🚜
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AgriU</string>
+    <string name="title_activity_main">AgriU</string>
+    <string name="package_name">io.agriu.app</string>
+    <string name="custom_url_scheme">io.agriu.app</string>
+</resources>

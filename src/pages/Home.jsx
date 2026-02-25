@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { storage } from '../utils/storage';
 import { lessons } from '../data/mockData';
 import { Play, TrendingUp, Award, Droplets } from 'lucide-react';
+import { useAuth } from '../utils/AuthContext';
 
 export default function Home() {
     const [progress, setProgress] = useState(0);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
-        storage.getProgress().then(setProgress);
-    }, []);
+        if (user) {
+            storage.getProgress(user.uid).then(setProgress);
+        }
+    }, [user]);
 
     return (
         <div className="fade-in-up">
@@ -49,8 +53,8 @@ export default function Home() {
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <div className="card" style={{ flex: 1, textAlign: 'center', padding: '16px' }}>
                     <Award size={32} color="var(--accent-yellow)" style={{ margin: '0 auto 8px' }} />
-                    <h3 style={{ fontSize: '16px', margin: 0 }}>Basic Cert.</h3>
-                    <small>2 Modules away</small>
+                    <h3 style={{ fontSize: '16px', margin: 0 }}>Agri-U Badges</h3>
+                    <small>Collect them all</small>
                 </div>
                 <div className="card" style={{ flex: 1, textAlign: 'center', padding: '16px' }}>
                     <TrendingUp size={32} color="var(--success)" style={{ margin: '0 auto 8px' }} />
