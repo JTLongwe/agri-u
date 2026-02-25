@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Heart, Share2, Trash2 } from 'lucide-react';
+import { MessageSquare, Heart, Share2, Trash2, Languages } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../utils/AuthContext';
 import { db } from '../config/firebase';
 import { collection, onSnapshot, addDoc, updateDoc, doc, query, orderBy, serverTimestamp, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
+import translate from 'translate';
+import { useTranslation } from 'react-i18next';
 
 export default function Community() {
     const [feed, setFeed] = useState([]);
     const [newPost, setNewPost] = useState('');
     const [loading, setLoading] = useState(true);
+    const [translatingId, setTranslatingId] = useState(null);
     const { user } = useAuth();
+    const { i18n } = useTranslation();
+
+    // Configure Translate wrapper (defaults to Google free tier)
+    translate.engine = 'google';
 
     useEffect(() => {
         const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
@@ -99,6 +106,30 @@ export default function Community() {
         return `${Math.floor(diffHrs / 24)}d ago`;
     };
 
+    const handleTranslate = async (post, targetLang) => {
+        if (post.translatedText) return;
+
+        setTranslatingId(post.id);
+        try {
+            // Translate the text 
+            const result = await translate(post.text, targetLang);
+
+            // Update local feed state so we don't spam the DB with translations
+            setFeed(prevFeed => prevFeed.map(p => {
+                if (p.id === post.id) {
+                    return { ...p, translatedText: result };
+                }
+                return p;
+            }));
+            toast.success(`Translated to ${targetLang}`);
+        } catch (error) {
+            console.error(error);
+            toast.error("Translation API failed");
+        } finally {
+            setTranslatingId(null);
+        }
+    };
+
     return (
         <div className="fade-in-up">
             <h1>Community 🌍</h1>
@@ -183,7 +214,9 @@ export default function Community() {
                                         </div>
                                     </div>
 
-                                    <p style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>{post.text}</p>
+                                    <p style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>
+                                        {post.translatedText || post.text}
+                                    </p>
 
                                     <div style={{ display: 'flex', gap: '24px', color: 'var(--text-secondary)', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
                                         <div onClick={() => handleLike(post)} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: hasLiked ? 'var(--error)' : 'inherit', transition: 'transform 0.2s', transform: hasLiked ? 'scale(1.1)' : 'scale(1)' }}>
@@ -192,6 +225,11 @@ export default function Community() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                                             <MessageSquare size={18} /> {post.comments || 0}
                                         </div>
+                                        {!post.translatedText && (
+                                            <div onClick={() => handleTranslate(post, i18n.language)} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', opacity: translatingId === post.id ? 0.5 : 1 }}>
+                                                <Languages size={18} /> Translate
+                                            </div>
+                                        )}
                                         <div onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginLeft: 'auto' }}>
                                             <Share2 size={18} />
                                         </div>
