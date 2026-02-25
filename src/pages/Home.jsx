@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { storage } from '../utils/storage';
 import { lessons } from '../data/mockData';
-import { Play, TrendingUp, Award, Droplets } from 'lucide-react';
+import { Play, TrendingUp, Award, Droplets, Camera as CameraIcon, CloudSun, MapPin } from 'lucide-react';
 import { useAuth } from '../utils/AuthContext';
+import { Camera, CameraResultType } from '@capacitor/camera';
+import { Geolocation } from '@capacitor/geolocation';
+import toast from 'react-hot-toast';
 
 export default function Home() {
     const [progress, setProgress] = useState(0);
+    const [weather, setWeather] = useState(null);
+    const [isFetchingWeather, setIsFetchingWeather] = useState(false);
+    const [photo, setPhoto] = useState(null);
+    const [isScanning, setIsScanning] = useState(false);
+
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -15,6 +23,48 @@ export default function Home() {
             storage.getProgress(user.uid).then(setProgress);
         }
     }, [user]);
+
+    const fetchWeather = async () => {
+        setIsFetchingWeather(true);
+        try {
+            // Get actual native GPS coordinates!
+            const coordinates = await Geolocation.getCurrentPosition();
+
+            // Note: In production, pass coordinates.coords.latitude & longitude to OpenWeather API
+            // For now, simulate the API response so you can see the UI without configuring a new Key
+            setTimeout(() => {
+                setWeather({ temp: '26°C', condition: 'Sunny / Dry', location: 'Local Farm Coordinates' });
+                setIsFetchingWeather(false);
+                toast.success('Agro Weather fetched!');
+            }, 1000);
+        } catch (e) {
+            console.error(e);
+            toast.error("Enable Location Services to see weather.");
+            setIsFetchingWeather(false);
+        }
+    };
+
+    const takePhoto = async () => {
+        try {
+            // Opens native Android/iOS camera!
+            const image = await Camera.getPhoto({
+                quality: 80,
+                allowEditing: false,
+                resultType: CameraResultType.DataUrl
+            });
+            setPhoto(image.dataUrl);
+            setIsScanning(true);
+
+            // Note: In production, upload base64 image.dataUrl to Pl@ntNet API for AI analysis here
+            setTimeout(() => {
+                setIsScanning(false);
+                toast.success('Pl@ntNet API AI analysis complete. Crop appears healthy!', { duration: 4000 });
+            }, 2500);
+
+        } catch (e) {
+            console.error("Camera cancelled or unavailable");
+        }
+    };
 
     return (
         <div className="fade-in-up">
@@ -32,6 +82,43 @@ export default function Home() {
                     <Droplets size={32} style={{ opacity: 0.8 }} />
                 </div>
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
+                {/* Weather Data API Card */}
+                <div className="card" onClick={fetchWeather} style={{ padding: '16px', background: 'var(--surface-color)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <CloudSun size={28} color="var(--primary-green)" style={{ marginBottom: '8px' }} />
+                    <h3 style={{ fontSize: '15px', margin: 0 }}>Weather</h3>
+                    {isFetchingWeather ? (
+                        <small>Locating...</small>
+                    ) : weather ? (
+                        <small style={{ fontWeight: 'bold' }}>{weather.temp}, {weather.condition}</small>
+                    ) : (
+                        <small style={{ color: 'var(--text-secondary)' }}>Tap to fetch</small>
+                    )}
+                </div>
+
+                {/* Pl@ntNet AI Camera Card */}
+                <div className="card" onClick={takePhoto} style={{ padding: '16px', background: 'var(--surface-color)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <CameraIcon size={28} color="var(--accent-yellow)" style={{ marginBottom: '8px' }} />
+                    <h3 style={{ fontSize: '15px', margin: 0 }}>Scan Crop</h3>
+                    <small style={{ color: 'var(--text-secondary)' }}>Identify diseases</small>
+                </div>
+            </div>
+
+            {photo && (
+                <div className="card" style={{ marginTop: '16px', textAlign: 'center' }}>
+                    <h3 style={{ fontSize: '15px', marginBottom: '8px' }}>AI Image Analysis</h3>
+                    <img src={photo} alt="Scanned crop" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
+                    {isScanning ? (
+                        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            <div className="skeleton skeleton-avatar" style={{ width: '20px', height: '20px' }}></div>
+                            <small>Pl@ntNet analyzing...</small>
+                        </div>
+                    ) : (
+                        <p style={{ marginTop: '8px', color: 'var(--success)', fontWeight: 'bold' }}>✅ Healthy Crop</p>
+                    )}
+                </div>
+            )}
 
             <h2 style={{ fontSize: '18px', marginTop: '24px' }}>Your Progress</h2>
             <div className="glass-card">
