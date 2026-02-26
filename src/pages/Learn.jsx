@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { lessons } from '../data/mockData';
+import { db } from '../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { lessons as fallbackMockLessons } from '../data/mockData';
 import { storage } from '../utils/storage';
 import { Download, CloudOff, CheckCircle2, Search } from 'lucide-react';
 import { useNetwork } from '../utils/useNetwork';
@@ -10,6 +12,7 @@ export default function Learn() {
     const isOnline = useNetwork();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const [cloudLessons, setCloudLessons] = useState([]);
     const [savedLessons, setSavedLessons] = useState([]);
     const [activeCategory, setActiveCategory] = useState('All Courses');
     const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +20,28 @@ export default function Learn() {
 
     useEffect(() => {
         if (user) loadSaved();
+        fetchCloudLessons();
     }, [user]);
+
+    const fetchCloudLessons = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, 'lessons'));
+            const fetched = [];
+            querySnapshot.forEach((doc) => {
+                fetched.push({ id: doc.id, ...doc.data() });
+            });
+            // If we have cloud lessons, use them! Otherwise fall back to the mock MVP data
+            if (fetched.length > 0) {
+                setCloudLessons(fetched);
+            } else {
+                setCloudLessons(fallbackMockLessons);
+            }
+        } catch (error) {
+            console.error("Error fetching lessons:", error);
+            // Offline fallback
+            setCloudLessons(fallbackMockLessons);
+        }
+    };
 
     const loadSaved = async () => {
         const saved = await storage.getSavedLessons(user.uid);
@@ -77,7 +101,7 @@ export default function Learn() {
             </div>
 
             <div className="course-list">
-                {lessons
+                {cloudLessons
                     .filter(lesson => activeCategory === 'All Courses' || lesson.category === activeCategory)
                     .filter(lesson => lesson.title.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map((lesson) => {
@@ -85,12 +109,16 @@ export default function Learn() {
 
                         return (
                             <div key={lesson.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                                <div style={{ height: '140px', position: 'relative' }}>
-                                    <img
-                                        src={lesson.image}
-                                        alt={lesson.title}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
+                                <div style={{ height: '140px', position: 'relative', background: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {lesson.image ? (
+                                        <img
+                                            src={lesson.image}
+                                            alt={lesson.title}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <div style={{ fontSize: '48px' }}>{lesson.icon || '📚'}</div>
+                                    )}
                                     <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
                                         <span className="badge" style={{ background: 'rgba(255,255,255,0.9)', color: 'var(--primary-green)' }}>
                                             {lesson.category}

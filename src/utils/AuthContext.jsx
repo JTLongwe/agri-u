@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { storage } from './storage';
 
 const AuthContext = createContext();
 
@@ -9,13 +10,15 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser({
                     uid: currentUser.uid,
                     email: currentUser.email,
                     name: currentUser.displayName || 'Farmer'
                 });
+                // Pull cloud progress onto device immediately upon auth resolution
+                await storage.pullFromCloud(currentUser.uid);
             } else {
                 setUser(null);
             }
@@ -25,26 +28,25 @@ export function AuthProvider({ children }) {
         return () => unsubscribe();
     }, []);
 
-    // Helper for demo purposes: We'll register an anonymous-like email if they just provide a name,
-    // or actually do email/pass if built out. For your demo, if they input "Farmer Jo", 
-    // we'll abstract a Firebase login so it functions properly across devices.
-    const login = async (name) => {
-        const email = `${name.toLowerCase().replace(/\s/g, '')}@agriu.demo`;
-        const password = 'password123'; // Demo fallback
-
+    const login = async (email, password) => {
         try {
-            // Try to login
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            setUser({ uid: userCredential.user.uid, email, name });
+            return userCredential.user;
         } catch (error) {
-            // If doesn't exist, create it on the fly for the pristine demo UX
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                const newCred = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(newCred.user, { displayName: name });
-                setUser({ uid: newCred.user.uid, email, name });
-            } else {
-                console.error("Firebase Auth Error:", error);
-            }
+            console.error("Firebase Login Error:", error);
+            throw error;
+        }
+    };
+
+    const register = async (name, email, password) => {
+        try {
+            const newCred = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(newCred.user, { displayName: name });
+            setUser({ uid: newCred.user.uid, email, name });
+            return newCred.user;
+        } catch (error) {
+            console.error("Firebase Registration Error:", error);
+            throw error;
         }
     };
 
@@ -58,7 +60,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, register, logout }}>
             {!loading && children}
         </AuthContext.Provider>
     );

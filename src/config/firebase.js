@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
     apiKey: "AIzaSyB7nCKM8h5EAv9oHXK9ja_YqnmBSsuJ7x8",
@@ -24,4 +25,23 @@ enableIndexedDbPersistence(db).catch((err) => {
     }
 });
 
+// Messaging works only on supported browsers
+let messaging = null;
+
+const initMessaging = async () => {
+    try {
+        const supported = await isSupported();
+        if (supported) {
+            messaging = getMessaging(app);
+        } else {
+            console.warn("Firebase Messaging is not supported in this environment");
+        }
+    } catch (e) {
+        console.warn("Failed to initialize messaging:", e);
+    }
+};
+
+initMessaging();
+
+export { messaging, getToken, onMessage };
 export default app;

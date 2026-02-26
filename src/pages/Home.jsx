@@ -31,17 +31,39 @@ export default function Home() {
         try {
             // Get actual native GPS coordinates!
             const coordinates = await Geolocation.getCurrentPosition();
+            const lat = coordinates.coords.latitude;
+            const lon = coordinates.coords.longitude;
 
-            // Note: In production, pass coordinates.coords.latitude & longitude to OpenWeather API
-            // For now, simulate the API response so you can see the UI without configuring a new Key
-            setTimeout(() => {
-                setWeather({ temp: '26°C', condition: 'Sunny / Dry', location: 'Local Farm Coordinates' });
-                setIsFetchingWeather(false);
-                toast.success('Agro Weather fetched!');
-            }, 1000);
+            // Note: Make sure VITE_OPENWEATHER_API_KEY is defined in .env
+            const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
+
+            if (!apiKey) {
+                // Graceful fallback for the demo if keys aren't added yet
+                console.warn("OpenWeather API key missing. Falling back to mock data.");
+                setTimeout(() => {
+                    setWeather({ temp: '26°C', condition: 'Sunny / Dry', location: 'Local Farm Coordinates' });
+                    setIsFetchingWeather(false);
+                }, 1000);
+                return;
+            }
+
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
+            const data = await response.json();
+
+            if (response.ok) {
+                setWeather({
+                    temp: `${Math.round(data.main.temp)}°C`,
+                    condition: data.weather[0].main,
+                    location: data.name || 'Local Farm'
+                });
+                toast.success('Live Weather fetched!');
+            } else {
+                throw new Error(data.message || "Weather fetch failed");
+            }
         } catch (e) {
             console.error(e);
             toast.error("Enable Location Services to see weather.");
+        } finally {
             setIsFetchingWeather(false);
         }
     };
@@ -52,19 +74,58 @@ export default function Home() {
             const image = await Camera.getPhoto({
                 quality: 80,
                 allowEditing: false,
-                resultType: CameraResultType.DataUrl
+                resultType: CameraResultType.Base64 // Changed to Base64 for easier API transport
             });
-            setPhoto(image.dataUrl);
+
+            setPhoto(`data:image/jpeg;base64,${image.base64String}`);
             setIsScanning(true);
 
-            // Note: In production, upload base64 image.dataUrl to Pl@ntNet API for AI analysis here
-            setTimeout(() => {
-                setIsScanning(false);
-                toast.success('Pl@ntNet API AI analysis complete. Crop appears healthy!', { duration: 4000 });
-            }, 2500);
+            // Note: Make sure VITE_PLANTNET_API_KEY is defined in .env
+            const apiKey = import.meta.env.VITE_PLANTNET_API_KEY;
+
+            if (!apiKey) {
+                // Graceful fallback for the demo if keys aren't added yet
+                console.warn("Pl@ntNet API key missing. Falling back to mock data.");
+                setTimeout(() => {
+                    setIsScanning(false);
+                    toast.success('Mock AI analysis complete. Crop appears healthy!', { duration: 4000 });
+                }, 2500);
+                return;
+            }
+
+            // Pl@ntNet API expects multipart/form-data with the actual file buffer
+            const byteCharacters = atob(image.base64String);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+            const formData = new FormData();
+            formData.append('images', blob, 'crop.jpg');
+            // We tell the AI to look across all its plant data
+            formData.append('organs', 'leaf');
+
+            const response = await fetch(`https://my-api.plantnet.org/v2/identify/all?api-key=${apiKey}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.results && data.results.length > 0) {
+                const bestMatch = data.results[0];
+                toast.success(`Identified: ${bestMatch.species.scientificNameWithoutAuthor} ${(bestMatch.score * 100).toFixed(1)}% confidence`, { duration: 5000 });
+            } else {
+                toast.error("Could not confidently identify the crop.");
+            }
 
         } catch (e) {
-            console.error("Camera cancelled or unavailable");
+            console.error("Camera/API Error:", e);
+            toast.error("Scanning failed or was cancelled.");
+        } finally {
+            setIsScanning(false);
         }
     };
 

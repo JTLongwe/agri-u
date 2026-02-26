@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agri-U Final Demo Presentation</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #fce4ec;
+            /* Gentle matching tone */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2E7D32;
+            margin-top: 0;
+        }
+
+        .media-container {
+            position: relative;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 4px solid #333;
+            background: #000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            max-height: 70vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            /* WebP animation starts automatically in browsers */
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: #2E7D32;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1b5e20;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>🌱 Agri-U: Official Pitch Demo</h1>
+        <p>This automated presentation demonstrates our offline-first architecture, hardware geolocation mockup, AI crop
+            scanning, multiregional localization, and Duolingo-style gamification.</p>
+
+        <div class="media-container" id="player-container" style="display: none;">
+            <!-- The animated WebP recording -->
+            <img id="demo-video"
+                src="file:///C:/Users/joann/.gemini/antigravity/brain/1fd39707-b405-4f66-92a2-7bef23f05ca1/agriu_mo4_api_demo_v2_1771996963516.webp"
+                alt="Agri-U Demo Video">
+        </div>
+
+        <!-- The TTS voiceover audio -->
+        <audio id="demo-audio" src="agriu_demo_voiceover.mp3"></audio>
+
+        <div class="controls" id="start-screen">
+            <button onclick="startDemo()">▶️ Play Synchronized Demo</button>
+            <p><small>(Note: Due to FFmpeg animated WebP encoding limitations, this viewer perfectly synchronizes the
+                    automated browser recording with the generated voiceover.)</small></p>
+        </div>
+
+        <div class="controls" id="playback-controls" style="display: none;">
+            <p>Playing Presentation... 🎬</p>
+            <button onclick="restartDemo()">Restart Demo</button>
+        </div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('demo-audio');
+        const video = document.getElementById('demo-video');
+        const webpSrc = video.src;
+
+        function startDemo() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('player-container').style.display = 'flex';
+            document.getElementById('playback-controls').style.display = 'block';
+
+            // Reload the GIF/WebP to ensure it starts from frame 1 when audio starts
+            video.src = '';
+            setTimeout(() => {
+                video.src = webpSrc;
+                audio.play();
+            }, 50);
+        }
+
+        function restartDemo() {
+            audio.currentTime = 0;
+            video.src = '';
+            setTimeout(() => {
+                video.src = webpSrc;
+                audio.play();
+            }, 50);
+        }
+
+        audio.addEventListener('ended', () => {
+            document.querySelector('#playback-controls p').innerText = "Presentation Complete! ✅";
+        });
+    </script>
+</body>
+
+</html>
